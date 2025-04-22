@@ -38,7 +38,23 @@ This function should only be accessible to the contract owner, but it does not i
 Any malicious user can overwrite the owner's password, causing a complete loss of confidentiality. The owner may unwittingly retrieve a password that has been changed by an attacker.
 
 #### Proof of Concept
-This vulnerability can be confirmed by the test case `test_anyone_can_set_password()` in PasswordStore.t.sol, which demonstrates that non-owner addresses can successfully change the password.
+I have written a test that demonstrates how any non-owner address can modify the password:
+
+```solidity
+// Test demonstrating that non-owners can set the password
+function testNonOwnersCanSetPassword() public {
+    address nonOwner = makeAddr("nonOwner");
+    string memory newPass = "newPass";
+    vm.prank(nonOwner);
+    passwordStore.setPassword(newPass);
+
+    vm.prank(owner);
+    string memory actualPass = passwordStore.getPassword();
+    assertEq(actualPass, newPass);
+}
+```
+
+This test creates a non-owner address, uses it to set a new password, and then verifies that the owner retrieves this new password rather than the original one. The test passes, confirming the vulnerability.
 
 #### Recommended Mitigation
 Add an owner check similar to the one present in the `getPassword` function:
